@@ -8,6 +8,7 @@ use App\Http\Requests\Teams\UpdateTeamMemberRequest;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
@@ -41,13 +42,28 @@ class TeamMemberController extends Controller
 
         abort_if($team->owner()?->is($user), 403, __('The team owner cannot be removed.'));
 
-        $team->memberships()
-            ->where('user_id', $user->id)
-            ->delete();
+        DB::transaction(function () use ($team, $user) {
+            $isCurrentTeam = $user->isCurrentTeam($team);
+            $fallbackTeam = $isCurrentTeam
+                ? $user->fallbackTeam($team)
+                : null;
 
-        if ($user->isCurrentTeam($team)) {
-            $user->switchTeam($user->personalTeam());
-        }
+            $team->memberships()
+                ->where('user_id', $user->id)
+                ->delete();
+
+            if (! $isCurrentTeam) {
+                return;
+            }
+
+            if ($fallbackTeam) {
+                $user->switchTeam($fallbackTeam);
+
+                return;
+            }
+
+            $user->clearCurrentTeam();
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Member removed.')]);
 

@@ -55,6 +55,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
+        $this->assertNull($user->fresh()->current_team_id);
         $response->assertRedirect(route('dashboard'));
     }
 

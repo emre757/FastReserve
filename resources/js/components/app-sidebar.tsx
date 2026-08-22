@@ -19,9 +19,8 @@ import type { NavItem } from '@/types';
 
 export function AppSidebar() {
     const page = usePage();
-    const dashboardUrl = page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug)
-        : '/';
+    const dashboardUrl = dashboard();
+    const hasTeams = page.props.teams.length > 0;
 
     const mainNavItems: NavItem[] = [
         {
@@ -56,11 +55,13 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <TeamSwitcher />
-                    </SidebarMenuItem>
-                </SidebarMenu>
+                {hasTeams ? (
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <TeamSwitcher />
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                ) : null}
             </SidebarHeader>
 
             <SidebarContent>

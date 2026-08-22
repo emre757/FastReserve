@@ -59,10 +59,10 @@ const activeItemStyles =
 
 export function AppHeader({ breadcrumbs = [] }: Props) {
     const page = usePage();
-    const { auth, currentTeam } = page.props;
+    const { auth, teams } = page.props;
     const getInitials = useInitials();
     const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
-    const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/';
+    const dashboardUrl = dashboard();
 
     const mainNavItems: NavItem[] = [
         {
@@ -240,7 +240,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                             </DropdownMenuContent>
                         </DropdownMenu>
 
-                        <TeamSwitcher inHeader />
+                        {teams.length > 0 ? <TeamSwitcher inHeader /> : null}
                     </div>
                 </div>
             </div>

@@ -16,9 +16,6 @@ class DashboardTest extends TestCase
 
     public function test_guests_are_redirected_to_the_login_page()
     {
-        $user = User::factory()->create();
-        $team = $user->currentTeam;
-
         $response = $this->get(route('dashboard'));
         $response->assertRedirect(route('login'));
     }
@@ -26,13 +23,18 @@ class DashboardTest extends TestCase
     public function test_authenticated_users_can_visit_the_dashboard()
     {
         $user = User::factory()->create();
-        $team = $user->currentTeam;
 
         $response = $this
             ->actingAs($user)
             ->get(route('dashboard'));
 
-        $response->assertOk();
+        $response
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->where('currentTeam', null)
+                ->has('teams', 0),
+            );
     }
 
     public function test_dashboard_includes_pending_invitations_for_the_authenticated_user()

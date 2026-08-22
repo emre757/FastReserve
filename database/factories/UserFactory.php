@@ -39,11 +39,27 @@ class UserFactory extends Factory
     }
 
     /**
-     * Configure the model factory.
+     * Indicate that the user should own a current team.
      */
-    public function configure(): static
+    public function withTeam(): static
     {
-        return $this->afterCreating(function ($user) {
+        return $this->afterCreating(function (User $user) {
+            $team = Team::factory()->create();
+
+            $team->members()->attach($user, [
+                'role' => TeamRole::Owner->value,
+            ]);
+
+            $user->switchTeam($team);
+        });
+    }
+
+    /**
+     * Indicate that the user should own a personal team.
+     */
+    public function withPersonalTeam(): static
+    {
+        return $this->afterCreating(function (User $user) {
             $team = Team::factory()->personal()->create([
                 'name' => $user->name."'s Team",
             ]);

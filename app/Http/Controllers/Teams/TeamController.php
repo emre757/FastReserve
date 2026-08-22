@@ -22,12 +22,17 @@ class TeamController extends Controller
     /**
      * Display a listing of the user's teams.
      */
-    public function index(Request $request): Response
+    public function index(Request $request): RedirectResponse|Response
     {
         $user = $request->user();
+        $teams = $user->toUserTeams(includeCurrent: true);
+
+        if ($teams->isEmpty()) {
+            return to_route('profile.edit');
+        }
 
         return Inertia::render('teams/index', [
-            'teams' => $user->toUserTeams(includeCurrent: true),
+            'teams' => $teams,
         ]);
     }
 
@@ -126,21 +131,34 @@ class TeamController extends Controller
 
         $user = $request->user();
 
-        $fallbackTeam = $user->isCurrentTeam($team)
-            ? $user->fallbackTeam($team)
-            : null;
+        DB::transaction(function () use ($team, $user) {
+            $isCurrentTeam = $user->isCurrentTeam($team);
+            $fallbackTeam = $isCurrentTeam
+                ? $user->fallbackTeam($team)
+                : null;
 
-        $team->memberships()
-            ->where('user_id', $user->id)
-            ->delete();
+            $team->memberships()
+                ->where('user_id', $user->id)
+                ->delete();
 
-        if ($fallbackTeam) {
-            $user->switchTeam($fallbackTeam);
-        }
+            if (! $isCurrentTeam) {
+                return;
+            }
+
+            if ($fallbackTeam) {
+                $user->switchTeam($fallbackTeam);
+
+                return;
+            }
+
+            $user->clearCurrentTeam();
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('You left the team ":name"', ['name' => $team->name])]);
 
-        return to_route('teams.index');
+        return $user->teams()->exists()
+            ? to_route('teams.index')
+            : to_route('dashboard');
     }
 
     /**
@@ -149,26 +167,30 @@ class TeamController extends Controller
     public function destroy(DeleteTeamRequest $request, Team $team): RedirectResponse
     {
         $user = $request->user();
-        $fallbackTeam = $user->isCurrentTeam($team)
-            ? $user->fallbackTeam($team)
-            : null;
 
-        DB::transaction(function () use ($user, $team) {
+        DB::transaction(function () use ($team) {
             User::where('current_team_id', $team->id)
-                ->where('id', '!=', $user->id)
-                ->each(fn (User $affectedUser) => $affectedUser->switchTeam($affectedUser->personalTeam()));
+                ->each(function (User $affectedUser) use ($team) {
+                    $fallbackTeam = $affectedUser->fallbackTeam($team);
+
+                    if ($fallbackTeam) {
+                        $affectedUser->switchTeam($fallbackTeam);
+
+                        return;
+                    }
+
+                    $affectedUser->clearCurrentTeam();
+                });
 
             $team->invitations()->delete();
             $team->memberships()->delete();
             $team->delete();
         });
 
-        if ($fallbackTeam) {
-            $user->switchTeam($fallbackTeam);
-        }
-
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Team deleted.')]);
 
-        return to_route('teams.index');
+        return $user->teams()->exists()
+            ? to_route('teams.index')
+            : to_route('dashboard');
     }
 }

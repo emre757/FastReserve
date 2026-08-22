@@ -94,6 +94,15 @@ trait HasTeams
     }
 
     /**
+     * Clear the user's current team.
+     */
+    public function clearCurrentTeam(): void
+    {
+        $this->update(['current_team_id' => null]);
+        $this->setRelation('currentTeam', null);
+    }
+
+    /**
      * Determine if the user belongs to the given team.
      */
     public function belongsToTeam(Team $team): bool

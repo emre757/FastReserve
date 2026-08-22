@@ -15,13 +15,24 @@ class TeamTest extends TestCase
 
     public function test_the_teams_index_page_can_be_rendered()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withTeam()->create();
 
         $response = $this
             ->actingAs($user)
             ->get(route('teams.index'));
 
         $response->assertOk();
+    }
+
+    public function test_users_without_teams_are_redirected_away_from_the_teams_index()
+    {
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->get(route('teams.index'));
+
+        $response->assertRedirect(route('profile.edit'));
     }
 
     public function test_teams_can_be_created()
@@ -192,10 +203,9 @@ class TeamTest extends TestCase
         $this->assertEquals($alphaTeam->id, $user->fresh()->current_team_id);
     }
 
-    public function test_deleting_current_team_falls_back_to_personal_team_when_alphabetically_first()
+    public function test_deleting_the_final_current_team_clears_the_current_team()
     {
         $user = User::factory()->create();
-        $personalTeam = $user->personalTeam();
         $team = Team::factory()->create(['name' => 'Zulu Team']);
         $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
@@ -213,17 +223,19 @@ class TeamTest extends TestCase
             'id' => $team->id,
         ]);
 
-        $this->assertEquals($personalTeam->id, $user->fresh()->current_team_id);
+        $this->assertNull($user->fresh()->current_team_id);
+        $response->assertRedirect(route('dashboard'));
     }
 
     public function test_deleting_non_current_team_leaves_current_team_unchanged()
     {
         $user = User::factory()->create();
-        $personalTeam = $user->personalTeam();
+        $currentTeam = Team::factory()->create(['name' => 'Current Team']);
         $team = Team::factory()->create();
+        $currentTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
         $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-        $user->update(['current_team_id' => $personalTeam->id]);
+        $user->update(['current_team_id' => $currentTeam->id]);
 
         $response = $this
             ->actingAs($user)
@@ -237,7 +249,7 @@ class TeamTest extends TestCase
             'id' => $team->id,
         ]);
 
-        $this->assertEquals($personalTeam->id, $user->fresh()->current_team_id);
+        $this->assertEquals($currentTeam->id, $user->fresh()->current_team_id);
     }
 
     public function test_members_can_leave_non_personal_teams()
@@ -248,15 +260,17 @@ class TeamTest extends TestCase
 
         $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
         $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+        $member->update(['current_team_id' => $team->id]);
 
         $response = $this
             ->actingAs($member)
             ->delete(route('teams.leave', $team));
 
-        $response->assertRedirect(route('teams.index'));
+        $response->assertRedirect(route('dashboard'));
         $response->assertInertiaFlash('toast', ['type' => 'success', 'message' => "You left the team \"{$team->name}\""]);
 
         $this->assertFalse($member->fresh()->belongsToTeam($team));
+        $this->assertNull($member->fresh()->current_team_id);
     }
 
     public function test_leaving_current_team_switches_to_alphabetically_first_remaining_team()
@@ -288,7 +302,7 @@ class TeamTest extends TestCase
 
     public function test_personal_teams_cannot_be_left()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withPersonalTeam()->create();
         $personalTeam = $user->personalTeam();
 
         $response = $this
@@ -328,7 +342,7 @@ class TeamTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_deleting_team_switches_other_affected_users_to_their_personal_team()
+    public function test_deleting_a_team_clears_it_as_the_current_team_for_affected_users_without_fallbacks()
     {
         $owner = User::factory()->create();
         $member = User::factory()->create();
@@ -348,12 +362,13 @@ class TeamTest extends TestCase
 
         $response->assertRedirect();
 
-        $this->assertEquals($member->personalTeam()->id, $member->fresh()->current_team_id);
+        $this->assertNull($owner->fresh()->current_team_id);
+        $this->assertNull($member->fresh()->current_team_id);
     }
 
     public function test_personal_teams_cannot_be_deleted()
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withPersonalTeam()->create();
 
         $personalTeam = $user->personalTeam();
 

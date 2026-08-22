@@ -24,6 +24,10 @@ export function TeamSwitcher({ inHeader = false }: TeamSwitcherProps) {
     const currentTeam = page.props.currentTeam;
     const teams = page.props.teams ?? [];
 
+    if (teams.length === 0) {
+        return null;
+    }
+
     const switchTeam = (team: Team) => {
         const previousTeamSlug = currentTeam?.slug;
 
