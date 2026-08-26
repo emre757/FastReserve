@@ -14,7 +14,6 @@ export type Auth = {
     user: User;
 };
 
-
 export type TwoFactorSetupData = {
     svg: string;
     url: string;
