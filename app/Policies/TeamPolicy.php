@@ -27,9 +27,10 @@ class TeamPolicy
     /**
      * Determine whether the user can create models.
      */
+    // TODO: change logic so teams can be created (invitation dependent)
     public function create(User $user): bool
     {
-        return true;
+        return app()->environment('local', 'testing'); // temporary true during development while working on this feature
     }
 
     /**

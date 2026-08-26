@@ -32,6 +32,26 @@ class EnsureTeamMembership
     }
 
     /**
+     * Get the team associated with the request.
+     * If it cannot find any within the request, it'll check the stored users current team
+     */
+    protected function team(Request $request): ?Team
+    {
+        $team = $request->route('current_team')
+            ?? $request->route('team');
+
+        if ($team instanceof Team) {
+            return $team;
+        }
+
+        if (is_string($team)) {
+            return Team::where('slug', $team)->first();
+        }
+
+        return $request->user()?->currentTeam;
+    }
+
+    /**
      * Ensure the given user has at least the given role, if applicable.
      */
     protected function ensureTeamMemberHasRequiredRole(User $user, Team $team, ?string $minimumRole): void
@@ -50,19 +70,5 @@ class EnsureTeamMembership
             ! $role->isAtLeast($requiredRole),
             403,
         );
-    }
-
-    /**
-     * Get the team associated with the request.
-     */
-    protected function team(Request $request): ?Team
-    {
-        $team = $request->route('current_team') ?? $request->route('team');
-
-        if (is_string($team)) {
-            $team = Team::where('slug', $team)->first();
-        }
-
-        return $team;
     }
 }

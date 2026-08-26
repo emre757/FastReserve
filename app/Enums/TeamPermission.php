@@ -13,4 +13,8 @@ enum TeamPermission: string
 
     case CreateInvitation = 'invitation:create';
     case CancelInvitation = 'invitation:cancel';
+
+    case CreateOffering = 'offering:create';
+    case UpdateOffering = 'offering:update';
+    case DeleteOffering = 'offering:delete';
 }

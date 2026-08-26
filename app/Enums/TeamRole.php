@@ -9,11 +9,33 @@ enum TeamRole: string
     case Member = 'member';
 
     /**
+     * Get the roles that can be assigned to team members (excludes Owner).
+     *
+     * @return array<array{value: string, label: string}>
+     */
+    public static function assignable(): array
+    {
+        return collect(self::cases())
+            ->filter(fn (self $role) => $role !== self::Owner)
+            ->map(fn (self $role) => ['value' => $role->value, 'label' => $role->label()])
+            ->values()
+            ->toArray();
+    }
+
+    /**
      * Get the display label for the role.
      */
     public function label(): string
     {
         return ucfirst($this->value);
+    }
+
+    /**
+     * Determine if the role has the given permission.
+     */
+    public function hasPermission(TeamPermission $permission): bool
+    {
+        return in_array($permission, $this->permissions());
     }
 
     /**
@@ -29,17 +51,20 @@ enum TeamRole: string
                 TeamPermission::UpdateTeam,
                 TeamPermission::CreateInvitation,
                 TeamPermission::CancelInvitation,
+                TeamPermission::CreateOffering,
+                TeamPermission::UpdateOffering,
+                TeamPermission::DeleteOffering,
             ],
             self::Member => [],
         };
     }
 
     /**
-     * Determine if the role has the given permission.
+     * Check if this role is at least as privileged as another role.
      */
-    public function hasPermission(TeamPermission $permission): bool
+    public function isAtLeast(TeamRole $role): bool
     {
-        return in_array($permission, $this->permissions());
+        return $this->level() >= $role->level();
     }
 
     /**
@@ -53,27 +78,5 @@ enum TeamRole: string
             self::Admin => 2,
             self::Member => 1,
         };
-    }
-
-    /**
-     * Check if this role is at least as privileged as another role.
-     */
-    public function isAtLeast(TeamRole $role): bool
-    {
-        return $this->level() >= $role->level();
-    }
-
-    /**
-     * Get the roles that can be assigned to team members (excludes Owner).
-     *
-     * @return array<array{value: string, label: string}>
-     */
-    public static function assignable(): array
-    {
-        return collect(self::cases())
-            ->filter(fn (self $role) => $role !== self::Owner)
-            ->map(fn (self $role) => ['value' => $role->value, 'label' => $role->label()])
-            ->values()
-            ->toArray();
     }
 }

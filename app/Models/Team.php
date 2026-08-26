@@ -96,6 +96,24 @@ class Team extends Model
     }
 
     /**
+     * Get all offerings for this team/company.
+     *
+     * @return HasMany<Offering, $this>
+     */
+    public function offerings(): HasMany
+    {
+        return $this->hasMany(Offering::class);
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -105,13 +123,5 @@ class Team extends Model
         return [
             'is_personal' => 'boolean',
         ];
-    }
-
-    /**
-     * Get the route key for the model.
-     */
-    public function getRouteKeyName(): string
-    {
-        return 'slug';
     }
 }
