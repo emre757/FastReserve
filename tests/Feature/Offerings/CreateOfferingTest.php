@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AuditAction;
 use App\Enums\Currency;
 use App\Enums\TeamRole;
 use App\Models\Offering;
@@ -87,6 +88,15 @@ describe('Happy path create offering', function () {
             ->and($offering->hold_duration_minutes)->toBe(10); // 10 is the set default value in migration
 
         $response->assertRedirect(route('offerings.show', $offering));
+
+        // check if audit log was created
+        $this->assertDatabaseHas('audit_logs', [
+            'actor_id' => $this->user->id,
+            'actor_type' => $this->user->getMorphClass(),
+            'subject_id' => $offering->id,
+            'subject_type' => $offering->getMorphClass(),
+            'action' => AuditAction::OfferingCreated,
+        ]);
     });
 
     it('creates a free offering and redirects to its page', function () {

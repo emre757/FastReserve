@@ -37,6 +37,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['team_id', 'status', 'starts_at']);
+            $table->index('deleted_at');
         });
     }
 

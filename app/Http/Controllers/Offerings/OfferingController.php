@@ -2,56 +2,55 @@
 
 namespace App\Http\Controllers\Offerings;
 
+use App\Actions\Offerings\CreateOffering;
 use App\Enums\Currency;
+use App\Events\Offerings\OfferingCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Offerings\StoreOfferingRequest;
 use App\Http\Requests\Offerings\UpdateOfferingRequest;
+use App\Http\Resources\Offerings\IndexResource;
 use App\Models\Offering;
-use Carbon\Carbon;
+use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 final class OfferingController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): void
+    public function index(Team $team): Response
     {
-        //
+        $offerings = $team->offerings()->get();
+
+        return Inertia::render('offerings/index', [
+            'company' => $team->only(['name', 'slug']),
+            'offerings' => IndexResource::collection($offerings),
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     * @throws Throwable
      */
-    public function store(StoreOfferingRequest $request): RedirectResponse
+    public function store(StoreOfferingRequest $request, CreateOffering $createOffering): RedirectResponse
     {
         // remove team context from field as it was only needed to check outdated form
         $data = $request->safe()->except('team_context');
 
-        // convert all dates to the correct format  & to utc
-        foreach ([
-            'starts_at',
-            'ends_at',
-            'booking_deadline_at',
-            'cancellation_deadline_at',
-        ] as $field) {
-            if (! empty($data[$field])) {
-                $data[$field] = Carbon::createFromFormat(
-                    '!Y-m-d\TH:i',
-                    $data[$field],
-                    $data['timezone'],
-                )->utc();
-            }
-        }
+        $offering = DB::transaction(function () use ($request, $data, $createOffering) {
+            $user = $request->user();
+            $offer = $createOffering($user, $data);
 
-        $offering = $request->user()
-            ->currentTeam
-            ->offerings()
-            ->create($data);
+            OfferingCreated::dispatch($offer, $user, $request->ip());
+
+            return $offer;
+        });
 
         return to_route('offerings.show', $offering);
     }
@@ -76,7 +75,8 @@ final class OfferingController extends Controller
     {
         Gate::authorize('view', $offering);
 
-        return Inertia::render('offerings/show-offering', [
+        return Inertia::render('offerings/show', [
+            'company' => $offering->team->only(['name', 'slug']),
             'offering' => $offering->only([
                 'id',
                 'name',
@@ -92,6 +92,10 @@ final class OfferingController extends Controller
                 'hold_duration_minutes',
                 'status',
             ]),
+            'permissions' => [
+                'canUpdateOffering' => Gate::allows('update', $offering),
+                'canDeleteOffering' => Gate::allows('delete', $offering),
+            ],
         ]);
     }
 
@@ -100,7 +104,7 @@ final class OfferingController extends Controller
      */
     public function edit(Offering $offering): void
     {
-        //
+        Gate::authorize('update', $offering);
     }
 
     /**
@@ -108,14 +112,18 @@ final class OfferingController extends Controller
      */
     public function update(UpdateOfferingRequest $request, Offering $offering): void
     {
-        //
+        Gate::authorize('update', $offering);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Archive the specified resource from storage.
      */
-    public function destroy(Offering $offering): void
+    public function destroy(Offering $offering): RedirectResponse
     {
-        //
+        Gate::authorize('delete', $offering);
+
+        $offering->delete();
+
+        return to_route('companies.offerings.index', $offering->team->slug);
     }
 }

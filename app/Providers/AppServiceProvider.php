@@ -2,7 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Offering;
+use App\Models\Team;
+use App\Models\TeamInvitation;
+use App\Models\User;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureMorphMap();
     }
 
     /**
@@ -55,5 +61,15 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    protected function configureMorphMap(): void
+    {
+        Relation::enforceMorphMap([
+            'offering' => Offering::class,
+            'team' => Team::class,
+            'team_invitation' => TeamInvitation::class,
+            'user' => User::class,
+        ]);
     }
 }

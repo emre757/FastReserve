@@ -27,7 +27,16 @@ class OfferingPolicy
         }
 
         // if soft deleted then only allow those with delete offering permission
-        return $user->hasTeamPermission($offering->team, TeamPermission::DeleteOffering);
+        return $this->hasCurrentTeamPermission($user, $offering->team, TeamPermission::DeleteOffering);
+    }
+
+    private function hasCurrentTeamPermission(
+        User $user,
+        Team $team,
+        ?TeamPermission $permission
+    ): bool {
+        return $user->current_team_id === $team->id
+            && ($permission === null || $user->hasTeamPermission($team, $permission));
     }
 
     /**
@@ -35,7 +44,7 @@ class OfferingPolicy
      */
     public function create(User $user, Team $team): bool
     {
-        return $user->hasTeamPermission($team, TeamPermission::CreateOffering);
+        return $this->hasCurrentTeamPermission($user, $team, TeamPermission::CreateOffering);
     }
 
     /**
@@ -43,7 +52,7 @@ class OfferingPolicy
      */
     public function update(User $user, Offering $offering): bool
     {
-        return $user->hasTeamPermission($offering->team, TeamPermission::UpdateOffering);
+        return $this->hasCurrentTeamPermission($user, $offering->team, TeamPermission::UpdateOffering);
     }
 
     /**
@@ -51,7 +60,7 @@ class OfferingPolicy
      */
     public function delete(User $user, Offering $offering): bool
     {
-        return $user->hasTeamPermission($offering->team, TeamPermission::DeleteOffering);
+        return $this->hasCurrentTeamPermission($user, $offering->team, TeamPermission::DeleteOffering);
     }
 
     /**

@@ -105,6 +105,11 @@ class Team extends Model
         return $this->hasMany(Offering::class);
     }
 
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
     /**
      * Get the route key for the model.
      */
