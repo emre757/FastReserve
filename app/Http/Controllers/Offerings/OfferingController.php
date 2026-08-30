@@ -36,6 +36,7 @@ final class OfferingController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
      * @throws Throwable
      */
     public function store(StoreOfferingRequest $request, CreateOffering $createOffering): RedirectResponse

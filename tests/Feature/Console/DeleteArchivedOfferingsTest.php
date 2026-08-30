@@ -18,13 +18,13 @@ it('deletes archived offerings of 30+ days old', function () {
 });
 
 it('skips archived offerings of under 30 days old', function () {
-   $offering = Offering::factory()->create([
-       'deleted_at' => now()->subDays(29),
-   ]);
+    $offering = Offering::factory()->create([
+        'deleted_at' => now()->subDays(29),
+    ]);
 
-   $this->artisan('app:delete-archived-offerings')->assertSuccessful();
+    $this->artisan('app:delete-archived-offerings')->assertSuccessful();
 
-   $this->assertDatabaseHas('offerings', [
-       'id' => $offering->id,
-   ]);
+    $this->assertDatabaseHas('offerings', [
+        'id' => $offering->id,
+    ]);
 });

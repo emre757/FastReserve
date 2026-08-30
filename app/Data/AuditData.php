@@ -4,7 +4,13 @@ namespace App\Data;
 
 use Illuminate\Database\Eloquent\Model;
 
-final readonly class AuditData {
+final readonly class AuditData
+{
+    /**
+     * @param  array<string, mixed>  $old_values
+     * @param  array<string, mixed>  $new_values
+     * @param  array<string, mixed>  $metadata
+     */
     public function __construct(
         public Model $subject,
         public string $action,

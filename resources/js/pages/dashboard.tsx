@@ -6,7 +6,6 @@ import { dashboard } from '@/routes';
 import { create } from '@/routes/offerings';
 import type { DashboardInvitation } from '@/types';
 
-
 type Props = {
     pendingInvitations?: DashboardInvitation[];
 };

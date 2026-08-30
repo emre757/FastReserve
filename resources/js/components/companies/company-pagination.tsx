@@ -10,8 +10,6 @@ import {
 import type { PaginationData } from '@/types/pagination';
 
 export function CompanyPagination({ links, meta }: PaginationData) {
-    console.log(links, meta);
-
     const metaLinks = meta.links.slice(1, -1); // remove prev and next from links
 
     return (
