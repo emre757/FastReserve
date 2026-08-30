@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\DeleteArchivedOfferings;
 use App\Models\TeamInvitation;
 use Illuminate\Support\Facades\Schedule;
 
@@ -9,3 +10,5 @@ Schedule::call(function () {
         ->where('expires_at', '<', now())
         ->delete();
 })->daily()->description('Delete expired team invitations');
+
+Schedule::command(DeleteArchivedOfferings::class)->daily()->description('Delete archived offerings');
