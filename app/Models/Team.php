@@ -105,6 +105,11 @@ class Team extends Model
         return $this->hasMany(Offering::class);
     }
 
+    /**
+     * Get all audit logs for this team/company.
+     *
+     * @return HasMany<AuditLog, $this>
+     */
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);
