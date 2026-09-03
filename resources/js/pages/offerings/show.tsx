@@ -1,4 +1,5 @@
 import { Head } from '@inertiajs/react';
+import OfferingCapacityCount from '@/components/offerings/offering-capacity-count';
 import OfferingHeader from '@/components/offerings/offering-header';
 import { index as companiesIndex } from '@/routes/companies';
 import { index as offeringsIndex } from '@/routes/companies/offerings';
@@ -71,6 +72,13 @@ export default function Show({ offering, permissions }: Props) {
                     )}
                     can_edit={permissions.canUpdateOffering}
                     can_delete={permissions.canDeleteOffering}
+                />
+
+                {/*TODO: remove hardcoded spot value*/}
+                <OfferingCapacityCount
+                    key={'capacity-' + offering.id}
+                    offeringId={offering.id}
+                    availableSpots={0}
                 />
             </div>
         </>
