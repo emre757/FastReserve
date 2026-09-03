@@ -15,6 +15,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { dashboard } from '@/routes';
 import { store } from '@/routes/offerings';
 import type { Team } from '@/types/teams';
 
@@ -351,3 +352,15 @@ function OfferingForm({
         </>
     );
 }
+
+CreateOfferingForm.layout = () => ({
+    breadcrumbs: [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+        },
+        {
+            title: 'Create Offering',
+        },
+    ],
+});

@@ -10,6 +10,13 @@ export type Team = {
     isCurrent?: boolean;
 };
 
+export type TeamSummary = {
+    name: string;
+    slug: string;
+    offerings_count: number;
+    has_free_offerings: boolean;
+};
+
 export type TeamMember = {
     id: number;
     name: string;

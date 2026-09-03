@@ -106,6 +106,16 @@ class Team extends Model
     }
 
     /**
+     * Get all audit logs for this team/company.
+     *
+     * @return HasMany<AuditLog, $this>
+     */
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(AuditLog::class);
+    }
+
+    /**
      * Get the route key for the model.
      */
     public function getRouteKeyName(): string
