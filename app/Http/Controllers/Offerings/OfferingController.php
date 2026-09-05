@@ -97,6 +97,7 @@ final class OfferingController extends Controller
                 'canUpdateOffering' => Gate::allows('update', $offering),
                 'canDeleteOffering' => Gate::allows('delete', $offering),
             ],
+            'reservedSpots' => $offering->reservations()->occupiedSpots()->sum('quantity'),
         ]);
     }
 

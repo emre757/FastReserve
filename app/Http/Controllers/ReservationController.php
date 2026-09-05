@@ -2,9 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreReservationRequest;
-use App\Http\Requests\UpdateReservationRequest;
+use App\Actions\Reservations\CreateReservation;
+use App\Http\Requests\Reservations\StoreReservationRequest;
+use App\Http\Requests\Reservations\UpdateReservationRequest;
+use App\Http\Resources\Reservations\ShowResource;
+use App\Models\Offering;
 use App\Models\Reservation;
+use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
+use Throwable;
 
 class ReservationController extends Controller
 {
@@ -19,25 +26,36 @@ class ReservationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): void
+    public function create(Offering $offering): Response
     {
-        //
+        $reservedSpots = (int) $offering->reservations()->occupiedSpots()->sum('quantity');
+
+        return Inertia::render('reservations/create', [
+            'offering' => $offering->only('id', 'name', 'capacity', 'price', 'currency'),
+            'company' => $offering->team->only('name', 'slug'),
+            'availableSpots' => max(0, $offering->capacity - $reservedSpots),
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     * @throws Throwable
      */
-    public function store(StoreReservationRequest $request): void
+    public function store(StoreReservationRequest $request, Offering $offering, CreateReservation $createReservation): RedirectResponse
     {
-        //
+        $reservation = $createReservation($request->user(), $offering, $request->integer('spots'));
+
+        return to_route('reservations.show', $reservation);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Reservation $reservation): void
+    public function show(Reservation $reservation): Response
     {
-        //
+        $reservation = $reservation->loadMissing('offering.team');
+
+        return Inertia::render('reservations/show', ShowResource::make($reservation)->resolve());
     }
 
     /**

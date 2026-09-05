@@ -13,6 +13,7 @@ class Reservation extends Model
     protected $fillable = [
         'quantity',
         'status',
+        'expired_at',
     ];
 
     /** @return BelongsTo<User, $this> */

@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\OfferingStatus;
+use App\Models\Offering;
 use App\Models\Reservation;
 use App\Models\User;
 
@@ -20,15 +22,15 @@ class ReservationPolicy
      */
     public function view(User $user, Reservation $reservation): bool
     {
-        return false;
+        return $reservation->user_id === $user->id;
     }
 
     /**
      * Determine whether the user can create models.
      */
-    public function create(User $user): bool
+    public function create(User $user, Offering $offering): bool
     {
-        return false;
+        return $offering->status === OfferingStatus::Active && $user->can('view', $offering);
     }
 
     /**

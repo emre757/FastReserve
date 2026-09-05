@@ -7,6 +7,7 @@ import {
     ArrowRightStartOnRectangleIcon,
     NoSymbolIcon,
     TrashIcon,
+    Square3Stack3DIcon,
 } from '@heroicons/react/20/solid';
 import { router } from '@inertiajs/react';
 import { Clock, LoaderCircleIcon } from 'lucide-react';
@@ -28,6 +29,7 @@ type Props = {
     id: number;
     name: string;
     timezone: string;
+    capacity: number;
     starts_at: string;
     ends_at: string | null;
     booking_deadline_at: string | null;
@@ -40,6 +42,7 @@ export default function OfferingHeader({
     id,
     name,
     timezone,
+    capacity,
     starts_at,
     ends_at,
     booking_deadline_at,
@@ -64,6 +67,13 @@ export default function OfferingHeader({
                                 className="mr-1.5 size-5 shrink-0 text-gray-400 dark:text-gray-500"
                             />
                             {timezone}
+                        </div>
+                        <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
+                            <Square3Stack3DIcon
+                                aria-hidden="true"
+                                className="mr-1.5 size-5 shrink-0 text-gray-400 dark:text-gray-500"
+                            />
+                            Total capacity: {capacity}
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 dark:text-gray-400">
                             <ArrowRightStartOnRectangleIcon
