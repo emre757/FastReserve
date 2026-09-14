@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Teams;
 
 use App\Actions\Teams\CreateTeam;
-use App\Contracts\Payments\PaymentAccountGateway;
+use App\Enums\PaymentProvider;
 use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\DeleteTeamRequest;
@@ -55,7 +55,7 @@ final class TeamController extends Controller
     /**
      * Show the team edit page.
      */
-    public function edit(Request $request, Team $team, PaymentAccountGateway $paymentAccountGateway): Response
+    public function edit(Request $request, Team $team): Response
     {
         $user = $request->user();
 
@@ -96,7 +96,7 @@ final class TeamController extends Controller
             'canManagePayments' => $canManagePayments,
             'paymentAccounts' => $canManagePayments
                 ? $team->companyPaymentAccounts()
-                    ->forProvider($paymentAccountGateway->provider())
+                    ->forProvider(PaymentProvider::Stripe)
                     ->get()
                     ->map(fn (CompanyPaymentAccount $account): array => [
                         'provider' => $account->provider,
