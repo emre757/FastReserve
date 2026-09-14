@@ -1,7 +1,9 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
+import { AlertTriangleIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import type { SubmitEvent } from 'react';
 import InputError from '@/components/input-error';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,9 +39,11 @@ type OfferingFormData = {
 export default function CreateOfferingForm({
     timezones,
     currencies,
+    hasPaymentMethod,
 }: {
     timezones: string[];
     currencies: string[];
+    hasPaymentMethod: boolean;
 }) {
     const { currentTeam } = usePage().props;
 
@@ -53,6 +57,7 @@ export default function CreateOfferingForm({
             currentTeam={currentTeam}
             timezones={timezones}
             currencies={currencies}
+            hasPaymentMethod={hasPaymentMethod}
         />
     );
 }
@@ -61,10 +66,12 @@ function OfferingForm({
     currentTeam,
     timezones,
     currencies,
+    hasPaymentMethod,
 }: {
     currentTeam: Team;
     timezones: string[];
     currencies: string[];
+    hasPaymentMethod: boolean;
 }) {
     const form = useForm<OfferingFormData>(
         `CreateOffering:${currentTeam.slug}`,
@@ -107,12 +114,26 @@ function OfferingForm({
         <>
             <Head title={'Create Offering'} />
             <div className="m-5">
-                <header className="mb-10">
+                <header className="mb-5">
                     <h1 className="text-2xl font-semibold">Create offering</h1>
                     <p className="text-sm text-muted-foreground">
                         Creating this offering for {currentTeam.name}
                     </p>
                 </header>
+
+                {!hasPaymentMethod && (
+                    <Alert className="mb-5 max-w-md border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+                        <AlertTriangleIcon />
+                        <AlertTitle>
+                            Your company has no active payment methods.
+                        </AlertTitle>
+                        <AlertDescription>
+                            Publishing a paid offering with no active payment
+                            methods make booking unavailable. Ask company owner
+                            to set up payment methods in team settings.
+                        </AlertDescription>
+                    </Alert>
+                )}
 
                 <form onSubmit={submit} className="max-w-xs space-y-6">
                     <div className="grid gap-2">

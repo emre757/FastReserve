@@ -4,16 +4,15 @@ import { useState } from 'react';
 type AvailabilityChanged = {
     offeringId: number;
     remainingCapacity: number;
+    version: number;
 };
 
-type LiveCapacity = {
-    offeringId: number;
-    remainingCapacity: number;
-};
+type LiveCapacity = AvailabilityChanged;
 
 export function useOfferingCapacity(
     offeringId: number,
     initialAvailableSpots: number,
+    initialVersion: number,
 ): number {
     const [liveCapacity, setLiveCapacity] = useState<LiveCapacity | null>(null);
 
@@ -21,15 +20,24 @@ export function useOfferingCapacity(
         `offerings.${offeringId}`,
         'Offerings.OfferingAvailabilityChanged',
         (event) => {
-            setLiveCapacity({
-                offeringId: event.offeringId,
-                remainingCapacity: event.remainingCapacity,
+            if (event.offeringId !== offeringId) {
+                return;
+            }
+
+            setLiveCapacity((current) => {
+                const currentVersion =
+                    current?.offeringId === offeringId
+                        ? Math.max(current.version, initialVersion)
+                        : initialVersion;
+
+                return event.version > currentVersion ? event : current;
             });
         },
-        [offeringId],
+        [offeringId, initialVersion],
     );
 
-    return liveCapacity?.offeringId === offeringId
+    return liveCapacity?.offeringId === offeringId &&
+        liveCapacity.version > initialVersion
         ? liveCapacity.remainingCapacity
         : initialAvailableSpots;
 }

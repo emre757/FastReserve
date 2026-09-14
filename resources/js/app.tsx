@@ -13,11 +13,16 @@ configureEcho({
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
+// array of pages that shouldn't get the default app layout
+const excluded = ['payments/processing'];
+
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
             case name === 'welcome':
+                return null;
+            case excluded.includes(name):
                 return null;
             case name.startsWith('auth/'):
                 return AuthLayout;

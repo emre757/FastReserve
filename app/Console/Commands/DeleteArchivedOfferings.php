@@ -18,7 +18,19 @@ class DeleteArchivedOfferings extends Command
     {
         $deleteDate = now()->subDays(30);
 
-        $count = Offering::onlyTrashed()->where('deleted_at', '<=', $deleteDate)->forceDelete();
+        $count = 0;
+
+        // process models in batches to follow model events rule
+        // no reason to bypass this rule as this application has no huge number of records
+        foreach (
+            Offering::onlyTrashed()
+                ->where('deleted_at', '<=', $deleteDate)
+                ->lazyById(500) as $offering
+        ) {
+            if ($offering->forceDelete()) {
+                $count++;
+            }
+        }
 
         $this->info("Deleted {$count} archived offerings.");
 

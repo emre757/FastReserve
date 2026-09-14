@@ -30,6 +30,7 @@ type Props = {
         capacity: number;
         price: string;
         currency: string | null;
+        broadcast_version: number;
     };
     company: {
         name: string;
@@ -51,6 +52,7 @@ export default function Create({ offering, company, availableSpots }: Props) {
     const currentAvailableSpots = useOfferingCapacity(
         offering.id,
         availableSpots,
+        offering.broadcast_version,
     );
     const totalPrice =
         Number.isFinite(selectedSpots) && selectedSpots > 0

@@ -1,37 +1,16 @@
-import { Head } from '@inertiajs/react';
-import OfferingCapacityCount from '@/components/offerings/offering-capacity-count';
+import { Head, Link } from '@inertiajs/react';
+import { Building2 } from 'lucide-react';
+import OfferingAboutCard from '@/components/offerings/offering-about-card';
+import OfferingBookingCard from '@/components/offerings/offering-booking-card';
 import OfferingHeader from '@/components/offerings/offering-header';
+import type {
+    FormattedOfferingDates,
+    OfferingShowProps,
+} from '@/components/offerings/offering-show-types';
 import { useEchoConnectionStatus } from '@/hooks/use-echo-connection-status';
 import { useOfferingCapacity } from '@/hooks/use-offering-capacity';
 import { index as companiesIndex } from '@/routes/companies';
 import { index as offeringsIndex } from '@/routes/companies/offerings';
-
-type Props = {
-    company: {
-        name: string;
-        slug: string;
-    };
-    offering: {
-        id: number;
-        name: string;
-        description: string | null;
-        starts_at: string;
-        ends_at: string | null;
-        timezone: string;
-        capacity: number;
-        price: string | null;
-        currency: string | null;
-        booking_deadline_at: string | null;
-        cancellation_deadline_at: string | null;
-        hold_duration_minutes: number;
-        status: string;
-    };
-    permissions: {
-        canUpdateOffering: boolean;
-        canDeleteOffering: boolean;
-    };
-    reservedSpots: number;
-};
 
 function formatDateTime(value: string | null, timezone: string): string {
     if (value === null) {
@@ -45,103 +24,102 @@ function formatDateTime(value: string | null, timezone: string): string {
     }).format(new Date(value));
 }
 
-export default function Show({ offering, permissions, reservedSpots }: Props) {
-    const startsAtFormatted = formatDateTime(
-        offering.starts_at,
-        offering.timezone,
-    );
+export default function Show({
+    company,
+    offering,
+    permissions,
+    reservedSpots,
+    activeReservationId = null,
+}: OfferingShowProps) {
+    const dates: FormattedOfferingDates = {
+        startsAt: formatDateTime(offering.starts_at, offering.timezone),
+        endsAt: formatDateTime(offering.ends_at, offering.timezone),
+        bookingDeadline: formatDateTime(
+            offering.booking_deadline_at,
+            offering.timezone,
+        ),
+        cancellationDeadline: formatDateTime(
+            offering.cancellation_deadline_at,
+            offering.timezone,
+        ),
+    };
 
     const initialAvailableSpots = offering.capacity - reservedSpots;
     const availableSpots = useOfferingCapacity(
         offering.id,
         initialAvailableSpots,
+        offering.broadcast_version,
     );
 
     const connectionStatus = useEchoConnectionStatus();
-    const isConnected = connectionStatus === 'connected';
-
-    const stats = [
-        {
-            name: 'Price',
-            stat: offering.price
-                ? `${offering.price.toString()} ${offering.currency}`
-                : 'N/A',
-        },
-        { name: 'Available Spots', stat: availableSpots },
-        { name: 'Offering Status', stat: offering.status },
-    ];
 
     return (
         <>
             {/* no name as it may be too long */}
             <Head title={'Offering Details'} />
-            <div className={'m-5'}>
-                <OfferingHeader
-                    id={offering.id}
-                    name={offering.name}
-                    timezone={offering.timezone}
-                    capacity={offering.capacity}
-                    starts_at={startsAtFormatted}
-                    ends_at={formatDateTime(
-                        offering.ends_at,
-                        offering.timezone,
-                    )}
-                    cancellation_deadline_at={formatDateTime(
-                        offering.cancellation_deadline_at,
-                        offering.timezone,
-                    )}
-                    booking_deadline_at={formatDateTime(
-                        offering.booking_deadline_at,
-                        offering.timezone,
-                    )}
-                    can_edit={permissions.canUpdateOffering}
-                    can_delete={permissions.canDeleteOffering}
-                />
+            <div className="m-5">
+                <div className="mx-auto max-w-7xl space-y-6">
+                    <section className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
+                        <div
+                            aria-hidden="true"
+                            className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-sky-500 via-blue-500 to-indigo-500"
+                        />
+                        <div
+                            aria-hidden="true"
+                            className="absolute -top-24 -right-16 size-64 rounded-full bg-sky-500/5 blur-3xl"
+                        />
 
-                {/*stats (price, spots & status)*/}
-                <div>
-                    <dl className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                        {stats.map((item) => (
-                            <div
-                                key={item.name}
-                                className="relative overflow-hidden rounded-lg bg-white px-4 py-5 shadow-sm sm:p-6 dark:bg-gray-800/75 dark:inset-ring dark:inset-ring-white/10"
+                        <div className="relative">
+                            <Link
+                                href={offeringsIndex({ team: company.slug })}
+                                className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-sky-700 transition-colors hover:text-sky-900 dark:text-sky-400 dark:hover:text-sky-200"
                             >
-                                {item.name === 'Available Spots' &&
-                                    (isConnected ? (
-                                        <span className="absolute top-4 right-4 flex size-3">
-                                            <span className="absolute inline-flex size-full animate-ping rounded-full bg-sky-400 opacity-75" />
-                                            <span className="relative inline-flex size-3 rounded-full bg-sky-500" />
-                                        </span>
-                                    ) : (
-                                        <span className="absolute top-4 right-4 flex size-3">
-                                            <span className="relative inline-flex size-3 rounded-full bg-red-500" />
-                                        </span>
-                                    ))}
-                                <dt className="truncate text-sm font-medium text-gray-500 dark:text-gray-400">
-                                    {item.name}
-                                </dt>
-                                <dd className="mt-1 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">
-                                    {item.name !== 'Available Spots' ? (
-                                        item.stat
-                                    ) : isConnected ? (
-                                        <OfferingCapacityCount
-                                            key={'capacity-' + offering.id}
-                                            availableSpots={availableSpots}
-                                        />
-                                    ) : (
-                                        `${availableSpots} (live: ${connectionStatus})`
-                                    )}
-                                </dd>
-                            </div>
-                        ))}
-                    </dl>
+                                <Building2
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                                {company.name}
+                            </Link>
+
+                            <OfferingHeader
+                                id={offering.id}
+                                name={offering.name}
+                                timezone={offering.timezone}
+                                capacity={offering.capacity}
+                                starts_at={dates.startsAt}
+                                ends_at={dates.endsAt}
+                                cancellation_deadline_at={
+                                    dates.cancellationDeadline
+                                }
+                                booking_deadline_at={dates.bookingDeadline}
+                                can_edit={permissions.canUpdateOffering}
+                                can_delete={permissions.canDeleteOffering}
+                            />
+                        </div>
+                    </section>
+
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-start">
+                        <OfferingAboutCard
+                            offering={offering}
+                            dates={dates}
+                            showBookingTerms={permissions.canBook}
+                        />
+
+                        <OfferingBookingCard
+                            offering={offering}
+                            availableSpots={availableSpots}
+                            connectionStatus={connectionStatus}
+                            activeReservationId={activeReservationId}
+                            canBook={permissions.canBook}
+                        />
+                    </div>
                 </div>
             </div>
         </>
     );
 }
 
-Show.layout = ({ company, offering }: Props) => ({
+Show.layout = ({ company, offering }: OfferingShowProps) => ({
     breadcrumbs: [
         {
             title: 'Companies',

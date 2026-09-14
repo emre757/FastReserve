@@ -26,4 +26,5 @@ export type ReservationShowProps = {
         slug: string;
     };
     serverTime: string;
+    paymentMethods?: string[];
 };

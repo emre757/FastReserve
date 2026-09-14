@@ -10,6 +10,18 @@ use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
 
+Route::inertia('/test', 'payments/processing', [
+    'reservation' => [
+        'id' => 1,
+    ],
+    'offering' => [
+        'name' => 'offering name #001',
+    ],
+    'company' => [
+        'name' => 'company name #001',
+    ],
+]);
+
 Route::middleware(['auth'])->group(function () {
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
@@ -27,6 +39,14 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('offerings.reservations', ReservationController::class)
         ->shallow()
         ->scoped();
+
+    Route::post('reservations/{reservation}/cancel', [ReservationController::class, 'cancel'])
+        ->name('reservations.cancel');
+
+    Route::get('reservations', [ReservationController::class, 'userIndex'])
+        ->name('reservations.index');
+
+    // TODO: support free bookings
 });
 
 Route::middleware(['auth', EnsureTeamMembership::class])->group(function () {
@@ -36,3 +56,4 @@ Route::middleware(['auth', EnsureTeamMembership::class])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+require __DIR__.'/payments.php';

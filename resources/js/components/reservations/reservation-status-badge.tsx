@@ -3,6 +3,7 @@ import type { ReservationStatus } from '@/components/reservations/reservation-sh
 
 type Props = {
     status: ReservationStatus;
+    isFree?: boolean;
 };
 
 const statuses = {
@@ -39,7 +40,10 @@ const statuses = {
     }
 >;
 
-export default function ReservationStatusBadge({ status }: Props) {
+export default function ReservationStatusBadge({
+    status,
+    isFree = false,
+}: Props) {
     const statusDetails = statuses[status];
     const Icon = statusDetails.icon;
 
@@ -48,7 +52,9 @@ export default function ReservationStatusBadge({ status }: Props) {
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${statusDetails.className}`}
         >
             <Icon aria-hidden="true" className="size-3.5" />
-            {statusDetails.label}
+            {status === 'pending' && isFree
+                ? 'Awaiting confirmation'
+                : statusDetails.label}
         </span>
     );
 }

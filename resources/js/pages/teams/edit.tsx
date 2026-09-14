@@ -6,6 +6,8 @@ import DeleteTeamModal from '@/components/delete-team-modal';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import InviteMemberModal from '@/components/invite-member-modal';
+import type { StripeConnectionStatus } from '@/components/payments/stripe-connect-button';
+import StripeConnectButton from '@/components/payments/stripe-connect-button';
 import RemoveMemberModal from '@/components/remove-member-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -35,12 +37,19 @@ import type {
     TeamPermissions,
 } from '@/types';
 
+type CompanyPaymentAccount = {
+    provider: string;
+    status: StripeConnectionStatus;
+};
+
 type Props = {
     team: Team;
     members: TeamMember[];
     invitations: TeamInvitation[];
     permissions: TeamPermissions;
     availableRoles: RoleOption[];
+    canManagePayments: boolean;
+    paymentAccounts: CompanyPaymentAccount[];
 };
 
 export default function TeamEdit({
@@ -49,7 +58,11 @@ export default function TeamEdit({
     invitations,
     permissions,
     availableRoles,
+    canManagePayments,
+    paymentAccounts,
 }: Props) {
+    console.log(paymentAccounts, canManagePayments);
+
     const getInitials = useInitials();
 
     const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -143,6 +156,30 @@ export default function TeamEdit({
                         </>
                     )}
                 </div>
+
+                {canManagePayments && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <Heading
+                                variant="small"
+                                title="Payment Methods"
+                                description={
+                                    permissions.canCreateInvitation
+                                        ? 'Manage what payment methods are available for this team'
+                                        : ''
+                                }
+                            />
+                            <StripeConnectButton
+                                team={team.slug}
+                                status={
+                                    paymentAccounts.find(
+                                        (row) => row.provider === 'stripe',
+                                    )?.status ?? null
+                                }
+                            />
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">

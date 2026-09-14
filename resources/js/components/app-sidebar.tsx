@@ -1,5 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, Building2, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    Building2,
+    Calendar,
+    FolderGit2,
+    LayoutGrid,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -16,6 +22,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as companiesIndex } from '@/routes/companies';
+import { index as reservationsIndex } from '@/routes/reservations';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -33,6 +40,11 @@ export function AppSidebar() {
             title: 'Companies',
             href: companiesIndex(),
             icon: Building2,
+        },
+        {
+            title: 'Reservations',
+            href: reservationsIndex().url,
+            icon: Calendar,
         },
     ];
 

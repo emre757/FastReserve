@@ -4,16 +4,19 @@ namespace App\Http\Controllers\Offerings;
 
 use App\Actions\Offerings\CreateOffering;
 use App\Enums\Currency;
+use App\Enums\ReservationStatus;
 use App\Events\Offerings\OfferingCreated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Offerings\StoreOfferingRequest;
 use App\Http\Requests\Offerings\UpdateOfferingRequest;
 use App\Http\Resources\Offerings\IndexResource;
 use App\Models\Offering;
+use App\Models\Reservation;
 use App\Models\Team;
+use App\Support\Database\LockContext;
+use App\Support\Database\OrderedTransaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -39,12 +42,15 @@ final class OfferingController extends Controller
      *
      * @throws Throwable
      */
-    public function store(StoreOfferingRequest $request, CreateOffering $createOffering): RedirectResponse
-    {
+    public function store(
+        StoreOfferingRequest $request,
+        CreateOffering $createOffering,
+        OrderedTransaction $transactions,
+    ): RedirectResponse {
         // remove team context from field as it was only needed to check outdated form
         $data = $request->safe()->except('team_context');
 
-        $offering = DB::transaction(function () use ($request, $data, $createOffering) {
+        $offering = $transactions->run(function (LockContext $locks) use ($request, $data, $createOffering): Offering {
             $user = $request->user();
             $offer = $createOffering($user, $data);
 
@@ -66,13 +72,15 @@ final class OfferingController extends Controller
         return Inertia::render('offerings/create-offering-form', [
             'timezones' => \DateTimeZone::listIdentifiers(),
             'currencies' => Currency::cases(),
+            'hasPaymentMethod' => $request->user()->currentTeam->company_payment_accounts_count > 0,
         ]);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Offering $offering): Response
+    // TODO: cache certain data
+    public function show(Request $request, Offering $offering): Response
     {
         Gate::authorize('view', $offering);
 
@@ -92,12 +100,18 @@ final class OfferingController extends Controller
                 'cancellation_deadline_at',
                 'hold_duration_minutes',
                 'status',
+                'broadcast_version',
             ]),
             'permissions' => [
                 'canUpdateOffering' => Gate::allows('update', $offering),
                 'canDeleteOffering' => Gate::allows('delete', $offering),
+                'canBook' => Gate::allows('create', [
+                    Reservation::class,
+                    $offering,
+                ]),
             ],
             'reservedSpots' => $offering->reservations()->occupiedSpots()->sum('quantity'),
+            'activeReservationId' => $request->user()->reservations()->forOfferingByStatus($offering->id, ReservationStatus::Pending)->first()?->id,
         ]);
     }
 

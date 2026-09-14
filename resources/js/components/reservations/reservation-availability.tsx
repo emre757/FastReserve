@@ -1,5 +1,4 @@
 import { Users } from 'lucide-react';
-import OfferingCapacityCount from '@/components/offerings/offering-capacity-count';
 import { useEchoConnectionStatus } from '@/hooks/use-echo-connection-status';
 
 type Props = {
@@ -59,7 +58,7 @@ export default function ReservationAvailability({ availableSpots }: Props) {
             </dt>
             <dd className="relative mt-4 flex items-baseline gap-2 text-amber-950 dark:text-amber-50">
                 <span className="text-4xl font-bold tracking-tight">
-                    <OfferingCapacityCount availableSpots={availableSpots} />
+                    {availableSpots}
                 </span>
                 <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
                     spots left

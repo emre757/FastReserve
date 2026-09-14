@@ -25,16 +25,23 @@ function formatDateTime(value: string, timezone: string): string {
     }).format(new Date(value));
 }
 
-function statusMessage(status: ReservationShowProps['reservation']['status']) {
+function statusMessage(
+    status: ReservationShowProps['reservation']['status'],
+    isFree: boolean,
+) {
     switch (status) {
         case 'confirmed':
-            return 'Your payment is complete and your spots are confirmed.';
+            return isFree
+                ? 'Your free reservation is confirmed.'
+                : 'Your payment is complete and your spots are confirmed.';
         case 'expired':
-            return 'The payment window for this reservation has ended.';
+            return 'The hold for this reservation has expired.';
         case 'cancelled':
             return 'This reservation has been cancelled.';
         default:
-            return 'Your spots are held while you complete payment.';
+            return isFree
+                ? 'Your spots are held while you confirm your free reservation.'
+                : 'Your spots are held while you complete payment.';
     }
 }
 
@@ -44,6 +51,7 @@ export default function ReservationOverviewCard({
     company,
 }: Props) {
     const pricePerSpot = Number(offering.price);
+    const isFree = Number(reservation.amount_due) === 0;
 
     return (
         <Card className="gap-0 overflow-hidden py-0 shadow-md">
@@ -62,7 +70,10 @@ export default function ReservationOverviewCard({
                         <span className="text-sm font-medium text-sky-100">
                             Reservation #{reservation.id}
                         </span>
-                        <ReservationStatusBadge status={reservation.status} />
+                        <ReservationStatusBadge
+                            status={reservation.status}
+                            isFree={isFree}
+                        />
                     </div>
 
                     <div className="mt-8 flex items-start gap-4">
@@ -83,7 +94,7 @@ export default function ReservationOverviewCard({
                                 {offering.name}
                             </Link>
                             <p className="mt-3 text-sm/6 text-sky-100">
-                                {statusMessage(reservation.status)}
+                                {statusMessage(reservation.status, isFree)}
                             </p>
                         </div>
                     </div>
@@ -134,7 +145,9 @@ export default function ReservationOverviewCard({
                             Price per spot
                         </dt>
                         <dd className="mt-2 text-xl font-semibold text-foreground">
-                            {formatPrice(pricePerSpot, offering.currency)}
+                            {isFree
+                                ? 'Free'
+                                : formatPrice(pricePerSpot, offering.currency)}
                         </dd>
                     </div>
 
@@ -178,7 +191,13 @@ export default function ReservationOverviewCard({
                             Reference
                         </p>
                         <p className="mt-1 font-mono text-sm font-semibold text-foreground">
-                            {reservation.reference ?? 'Assigned after payment'}
+                            {reservation.reference ??
+                                (reservation.status === 'expired' ||
+                                reservation.status === 'cancelled'
+                                    ? 'Not assigned'
+                                    : isFree
+                                      ? 'Assigned after confirmation'
+                                      : 'Assigned after payment')}
                         </p>
                     </div>
                 </div>
