@@ -106,6 +106,16 @@ class Team extends Model
     }
 
     /**
+     * Get all company payment accounts for this team/company.
+     *
+     * @return HasMany<CompanyPaymentAccount, $this>
+     */
+    public function companyPaymentAccounts(): HasMany
+    {
+        return $this->hasMany(CompanyPaymentAccount::class);
+    }
+
+    /**
      * Get all audit logs for this team/company.
      *
      * @return HasMany<AuditLog, $this>

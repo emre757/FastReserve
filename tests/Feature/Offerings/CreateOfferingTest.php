@@ -6,10 +6,17 @@ use App\Enums\TeamRole;
 use App\Models\Offering;
 use App\Models\User;
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia;
 
-uses(LazilyRefreshDatabase::class);
+uses(DatabaseMigrations::class);
+
+// TODO: check if CreateOffering job was dispatched
+
+beforeEach(function () {
+    Queue::fake();
+});
 
 // create default payload, can be replaced by passing new value definitions in overrides parameter
 /**

@@ -1,9 +1,14 @@
 <?php
 
 use App\Models\Offering;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Queue;
 
-uses(RefreshDatabase::class);
+uses(DatabaseMigrations::class);
+
+beforeEach(function () {
+    Queue::fake(); // for offeringObserver
+});
 
 it('deletes archived offerings of 30+ days old', function () {
     $offering = Offering::factory()->create([

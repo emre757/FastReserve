@@ -13,7 +13,7 @@ final class CreateOffering
      */
     public function __invoke(User $user, array $data): Offering
     {
-        // convert all dates to the correct format  & to utc
+        // convert all dates to the correct format & to utc
         foreach ([
             'starts_at',
             'ends_at',

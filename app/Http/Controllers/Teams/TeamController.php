@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Teams;
 
 use App\Actions\Teams\CreateTeam;
+use App\Contracts\Payments\PaymentAccountGateway;
 use App\Enums\TeamRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Teams\DeleteTeamRequest;
 use App\Http\Requests\Teams\SaveTeamRequest;
+use App\Models\CompanyPaymentAccount;
 use App\Models\Membership;
 use App\Models\Team;
 use App\Models\User;
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class TeamController extends Controller
+final class TeamController extends Controller
 {
     /**
      * Display a listing of the user's teams.
@@ -53,9 +55,11 @@ class TeamController extends Controller
     /**
      * Show the team edit page.
      */
-    public function edit(Request $request, Team $team): Response
+    public function edit(Request $request, Team $team, PaymentAccountGateway $paymentAccountGateway): Response
     {
         $user = $request->user();
+
+        $canManagePayments = $user->can('manage-payments', $team);
 
         return Inertia::render('teams/edit', [
             'team' => [
@@ -89,6 +93,18 @@ class TeamController extends Controller
                 ]),
             'permissions' => $user->toTeamPermissions($team),
             'availableRoles' => TeamRole::assignable(),
+            'canManagePayments' => $canManagePayments,
+            'paymentAccounts' => $canManagePayments
+                ? $team->companyPaymentAccounts()
+                    ->forProvider($paymentAccountGateway->provider())
+                    ->get()
+                    ->map(fn (CompanyPaymentAccount $account): array => [
+                        'provider' => $account->provider,
+                        'status' => $account->status->value,
+                    ])
+                    ->values()
+                    ->all()
+                : [],
         ]);
     }
 

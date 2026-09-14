@@ -4,6 +4,8 @@ includes:
     - vendor/pestphp/pest-plugin-phpstan/extension.neon
 
 parameters:
+    parseModelCastsMethod: true
+
     paths:
         - app/
         - bootstrap/app.php
@@ -13,3 +15,6 @@ parameters:
         # - tests/
 
     level: 7
+
+rules:
+    - App\PHPStan\Rules\RequireModelEventsRule

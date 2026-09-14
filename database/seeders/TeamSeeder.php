@@ -6,7 +6,6 @@ use App\Models\Offering;
 use App\Models\Team;
 use Illuminate\Database\Seeder;
 
-// not seeded during normal round on purpose
 class TeamSeeder extends Seeder
 {
     /**

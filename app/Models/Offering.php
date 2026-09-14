@@ -2,19 +2,24 @@
 
 namespace App\Models;
 
+use App\Concerns\HasBroadcastVersion;
+use App\Contracts\RequiresModelEvents;
 use App\Enums\Currency;
 use App\Enums\OfferingStatus;
+use App\Observers\OfferingObserver;
 use Database\Factories\OfferingFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Offering extends Model
+#[ObservedBy(OfferingObserver::class)]
+class Offering extends Model implements RequiresModelEvents
 {
     /** @use HasFactory<OfferingFactory> */
-    use HasFactory, SoftDeletes;
+    use HasBroadcastVersion, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
