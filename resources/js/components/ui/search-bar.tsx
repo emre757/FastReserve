@@ -54,7 +54,7 @@ export default function SearchBar({ initialSearch, resultCount, onSearch, filter
         }, 300);
 
         return () => clearTimeout(timeout);
-    }, [search]);
+    }, [search, onSearch]);
 
     return (
         <div className="mx-auto flex w-full max-w-xl flex-wrap items-center gap-2">

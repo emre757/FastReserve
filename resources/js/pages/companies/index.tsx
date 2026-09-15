@@ -18,8 +18,8 @@ type Props = {
 
 const filterOptions: FilterOption[] = [
     {
-        label: 'Active',
-        value: 'active',
+        label: 'Open',
+        value: 'open',
     },
     {
         label: 'Free',

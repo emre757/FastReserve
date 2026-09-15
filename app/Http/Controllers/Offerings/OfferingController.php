@@ -72,7 +72,7 @@ final class OfferingController extends Controller
         return Inertia::render('offerings/create-offering-form', [
             'timezones' => \DateTimeZone::listIdentifiers(),
             'currencies' => Currency::cases(),
-            'hasPaymentMethod' => $request->user()->currentTeam->company_payment_accounts_count > 0,
+            'hasPaymentMethod' => $request->user()->currentTeam->companyPaymentAccounts()->activeMethods()->exists(),
         ]);
     }
 
